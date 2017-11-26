@@ -5,4 +5,4 @@ authors = ["Andrey Kutejko <andy128k@gmail.com>"]
 
 [dependencies]
 regex = "0.2.2"
-html5ever = "0.19.0"
+html5ever = "0.21.0"

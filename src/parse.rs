@@ -34,9 +34,11 @@ pub fn parse_bytes(input: &[u8]) -> RcDom {
 pub fn unparse_bytes(dom: RcDom) -> StdResult<Vec<u8>> {
     let mut buf: Vec<u8> = Vec::new();
 
+    let parent = QualName::new(Some(namespace_prefix!("html")), ns!(html), local_name!("div"));
+
     let opts = SerializeOpts {
         scripting_enabled: false,
-        traversal_scope: TraversalScope::ChildrenOnly,
+        traversal_scope: TraversalScope::ChildrenOnly(Some(parent)),
         create_missing_parent: false,
     };
 
