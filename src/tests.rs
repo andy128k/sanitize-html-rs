@@ -1,6 +1,8 @@
+#![cfg(test)]
+
 use super::sanitize_str;
 use super::rules::{Element, Rules};
-use super::rules::predefined::{basic, default, relaxed, restricted, untrusted};
+use super::rules::predefined::*;
 
 /* basic */
 
@@ -9,7 +11,7 @@ const BASIC_HTML: &str = "<b>Lo<!-- comment -->rem</b> <a href=\"pants\" title=\
 #[test]
 fn basic_default() {
     assert_eq!(
-        &sanitize_str(&default(), BASIC_HTML).unwrap(),
+        &sanitize_str(&DEFAULT, BASIC_HTML).unwrap(),
         "Lorem ipsum dolor sit amet alert(\"hello world\");"
     );
 }
@@ -17,7 +19,7 @@ fn basic_default() {
 #[test]
 fn basic_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), BASIC_HTML).unwrap(),
+        &sanitize_str(&RESTRICTED, BASIC_HTML).unwrap(),
         "<b>Lorem</b> ipsum <strong>dolor</strong> sit amet alert(\"hello world\");"
     );
 }
@@ -25,7 +27,7 @@ fn basic_restricted() {
 #[test]
 fn basic_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), BASIC_HTML).unwrap(),
+        &sanitize_str(&BASIC, BASIC_HTML).unwrap(),
         "<b>Lorem</b> <a href=\"pants\">ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br>amet alert(\"hello world\");"
     );
 }
@@ -33,7 +35,7 @@ fn basic_basic() {
 #[test]
 fn basic_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), BASIC_HTML).unwrap(),
+        &sanitize_str(&RELAXED, BASIC_HTML).unwrap(),
         "<b>Lorem</b> <a href=\"pants\" title=\"foo\">ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br>amet alert(\"hello world\");"
     );
 }
@@ -45,7 +47,7 @@ const MALFORMED_HTML: &str = "Lo<!-- comment -->rem</b> <a href=pants title=\"fo
 #[test]
 fn malformed_default() {
     assert_eq!(
-        &sanitize_str(&default(), MALFORMED_HTML).unwrap(),
+        &sanitize_str(&DEFAULT, MALFORMED_HTML).unwrap(),
         "Lorem dolor sit amet alert(\"hello world\");"
     );
 }
@@ -53,7 +55,7 @@ fn malformed_default() {
 #[test]
 fn malformed_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), MALFORMED_HTML).unwrap(),
+        &sanitize_str(&RESTRICTED, MALFORMED_HTML).unwrap(),
         "Lorem <strong>dolor</strong> sit amet alert(\"hello world\");"
     );
 }
@@ -61,7 +63,7 @@ fn malformed_restricted() {
 #[test]
 fn malformed_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), MALFORMED_HTML).unwrap(),
+        &sanitize_str(&BASIC, MALFORMED_HTML).unwrap(),
        "Lorem <a href=\"pants\"><strong>dolor</strong></a> sit<br>amet alert(\"hello world\");"
     );
 }
@@ -69,7 +71,7 @@ fn malformed_basic() {
 #[test]
 fn malformed_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), MALFORMED_HTML).unwrap(),
+        &sanitize_str(&RELAXED, MALFORMED_HTML).unwrap(),
         "Lorem <a href=\"pants\" title=\"foo>ipsum <a href=\"><strong>dolor</strong></a> sit<br>amet alert(\"hello world\");"
     );
 }
@@ -81,7 +83,7 @@ const UNCLOSED_HTML: &str = "<p>a</p><blockquote>b";
 #[test]
 fn unclosed_default() {
     assert_eq!(
-        &sanitize_str(&default(), UNCLOSED_HTML).unwrap(),
+        &sanitize_str(&DEFAULT, UNCLOSED_HTML).unwrap(),
         " a  b "
     );
 }
@@ -89,7 +91,7 @@ fn unclosed_default() {
 #[test]
 fn unclosed_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), UNCLOSED_HTML).unwrap(),
+        &sanitize_str(&RESTRICTED, UNCLOSED_HTML).unwrap(),
         " a  b "
     );
 }
@@ -97,7 +99,7 @@ fn unclosed_restricted() {
 #[test]
 fn unclosed_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), UNCLOSED_HTML).unwrap(),
+        &sanitize_str(&BASIC, UNCLOSED_HTML).unwrap(),
         "<p>a</p><blockquote>b</blockquote>"
     );
 }
@@ -105,7 +107,7 @@ fn unclosed_basic() {
 #[test]
 fn unclosed_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), UNCLOSED_HTML).unwrap(),
+        &sanitize_str(&RELAXED, UNCLOSED_HTML).unwrap(),
         "<p>a</p><blockquote>b</blockquote>"
     );
 }
@@ -117,7 +119,7 @@ const MALICIOUS_HTML: &str = "<b>Lo<!-- comment -->rem</b> <a href=\"javascript:
 #[test]
 fn malicious_default() {
     assert_eq!(
-        &sanitize_str(&default(), MALICIOUS_HTML).unwrap(),
+        &sanitize_str(&DEFAULT, MALICIOUS_HTML).unwrap(),
         "Lorem ipsum dolor sit amet &lt;script&gt;alert(\"hello world\");"
     );
 }
@@ -125,7 +127,7 @@ fn malicious_default() {
 #[test]
 fn malicious_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), MALICIOUS_HTML).unwrap(),
+        &sanitize_str(&RESTRICTED, MALICIOUS_HTML).unwrap(),
         "<b>Lorem</b> ipsum <strong>dolor</strong> sit amet &lt;script&gt;alert(\"hello world\");"
     );
 }
@@ -133,7 +135,7 @@ fn malicious_restricted() {
 #[test]
 fn malicious_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), MALICIOUS_HTML).unwrap(),
+        &sanitize_str(&BASIC, MALICIOUS_HTML).unwrap(),
         "<b>Lorem</b> <a>ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br>amet &lt;script&gt;alert(\"hello world\");"
     );
 }
@@ -141,7 +143,7 @@ fn malicious_basic() {
 #[test]
 fn malicious_untrusted() {
     assert_eq!(
-        &sanitize_str(&untrusted(), MALICIOUS_HTML).unwrap(),
+        &sanitize_str(&UNTRUSTED, MALICIOUS_HTML).unwrap(),
         "<b>Lorem</b> <a rel=\"noreferrer noopener\" target=\"_blank\">ipsum</a> <a href=\"http://foo.com/\" rel=\"noreferrer noopener\" target=\"_blank\"><strong>dolor</strong></a> sit amet &lt;script&gt;alert(\"hello world\");"
     );
 }
@@ -149,7 +151,7 @@ fn malicious_untrusted() {
 #[test]
 fn malicious_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), MALICIOUS_HTML).unwrap(),
+        &sanitize_str(&RELAXED, MALICIOUS_HTML).unwrap(),
         "<b>Lorem</b> <a title=\"foo\">ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br>amet &lt;script&gt;alert(\"hello world\");"
     );
 }
@@ -161,7 +163,7 @@ const RAW_COMMENT_HTML: &str = "<!-- comment -->Hello";
 #[test]
 fn raw_comment_default() {
     assert_eq!(
-        &sanitize_str(&default(), RAW_COMMENT_HTML).unwrap(),
+        &sanitize_str(&DEFAULT, RAW_COMMENT_HTML).unwrap(),
         "Hello"
     );
 }
@@ -169,20 +171,20 @@ fn raw_comment_default() {
 #[test]
 fn raw_comment_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), RAW_COMMENT_HTML).unwrap(),
+        &sanitize_str(&RESTRICTED, RAW_COMMENT_HTML).unwrap(),
         "Hello"
     );
 }
 
 #[test]
 fn raw_comment_basic() {
-    assert_eq!(&sanitize_str(&basic(), RAW_COMMENT_HTML).unwrap(), "Hello");
+    assert_eq!(&sanitize_str(&BASIC, RAW_COMMENT_HTML).unwrap(), "Hello");
 }
 
 #[test]
 fn raw_comment_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), RAW_COMMENT_HTML).unwrap(),
+        &sanitize_str(&RELAXED, RAW_COMMENT_HTML).unwrap(),
         "Hello"
     );
 }
@@ -194,7 +196,7 @@ const JS_INJECTION_HTML_1: &str = "<a href=\"javascript:alert(\'XSS\');\">foo</a
 #[test]
 fn js_injection_1_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_1).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_1).unwrap(),
         "foo"
     );
 }
@@ -202,7 +204,7 @@ fn js_injection_1_default() {
 #[test]
 fn js_injection_1_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_1).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_1).unwrap(),
         "foo"
     );
 }
@@ -210,7 +212,7 @@ fn js_injection_1_restricted() {
 #[test]
 fn js_injection_1_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_1).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_1).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -218,7 +220,7 @@ fn js_injection_1_basic() {
 #[test]
 fn js_injection_1_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_1).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_1).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -230,7 +232,7 @@ const JS_INJECTION_HTML_2: &str = "<a href=\"javascript :alert(\'XSS\');\">foo</
 #[test]
 fn js_injection_2_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_2).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_2).unwrap(),
         "foo"
     );
 }
@@ -238,7 +240,7 @@ fn js_injection_2_default() {
 #[test]
 fn js_injection_2_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_2).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_2).unwrap(),
         "foo"
     );
 }
@@ -246,7 +248,7 @@ fn js_injection_2_restricted() {
 #[test]
 fn js_injection_2_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_2).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_2).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -254,7 +256,7 @@ fn js_injection_2_basic() {
 #[test]
 fn js_injection_2_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_2).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_2).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -266,7 +268,7 @@ const JS_INJECTION_HTML_3: &str = "<a href=\"javascript: alert(\'XSS\');\">foo</
 #[test]
 fn js_injection_3_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_3).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_3).unwrap(),
         "foo"
     );
 }
@@ -274,7 +276,7 @@ fn js_injection_3_default() {
 #[test]
 fn js_injection_3_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_3).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_3).unwrap(),
         "foo"
     );
 }
@@ -282,7 +284,7 @@ fn js_injection_3_restricted() {
 #[test]
 fn js_injection_3_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_3).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_3).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -290,7 +292,7 @@ fn js_injection_3_basic() {
 #[test]
 fn js_injection_3_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_3).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_3).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -302,7 +304,7 @@ const JS_INJECTION_HTML_4: &str = "<a href=\"javascript : alert(\'XSS\');\">foo<
 #[test]
 fn js_injection_4_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_4).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_4).unwrap(),
         "foo"
     );
 }
@@ -310,7 +312,7 @@ fn js_injection_4_default() {
 #[test]
 fn js_injection_4_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_4).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_4).unwrap(),
         "foo"
     );
 }
@@ -318,7 +320,7 @@ fn js_injection_4_restricted() {
 #[test]
 fn js_injection_4_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_4).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_4).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -326,7 +328,7 @@ fn js_injection_4_basic() {
 #[test]
 fn js_injection_4_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_4).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_4).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -338,7 +340,7 @@ const JS_INJECTION_HTML_5: &str = "<a href=\":javascript:alert(\'XSS\');\">foo</
 #[test]
 fn js_injection_5_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_5).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_5).unwrap(),
         "foo"
     );
 }
@@ -346,7 +348,7 @@ fn js_injection_5_default() {
 #[test]
 fn js_injection_5_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_5).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_5).unwrap(),
         "foo"
     );
 }
@@ -354,7 +356,7 @@ fn js_injection_5_restricted() {
 #[test]
 fn js_injection_5_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_5).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_5).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -362,7 +364,7 @@ fn js_injection_5_basic() {
 #[test]
 fn js_injection_5_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_5).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_5).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -374,7 +376,7 @@ const JS_INJECTION_HTML_6: &str = "<a href=\"javascript&#58;\">foo</a>";
 #[test]
 fn js_injection_6_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_6).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_6).unwrap(),
         "foo"
     );
 }
@@ -382,7 +384,7 @@ fn js_injection_6_default() {
 #[test]
 fn js_injection_6_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_6).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_6).unwrap(),
         "foo"
     );
 }
@@ -390,7 +392,7 @@ fn js_injection_6_restricted() {
 #[test]
 fn js_injection_6_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_6).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_6).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -398,7 +400,7 @@ fn js_injection_6_basic() {
 #[test]
 fn js_injection_6_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_6).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_6).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -410,7 +412,7 @@ const JS_INJECTION_HTML_7: &str = "<a href=\"javascript&#0058;\">foo</a>";
 #[test]
 fn js_injection_7_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_7).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_7).unwrap(),
         "foo"
     );
 }
@@ -418,7 +420,7 @@ fn js_injection_7_default() {
 #[test]
 fn js_injection_7_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_7).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_7).unwrap(),
         "foo"
     );
 }
@@ -426,7 +428,7 @@ fn js_injection_7_restricted() {
 #[test]
 fn js_injection_7_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_7).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_7).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -434,7 +436,7 @@ fn js_injection_7_basic() {
 #[test]
 fn js_injection_7_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_7).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_7).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -446,7 +448,7 @@ const JS_INJECTION_HTML_8: &str = "<a href=&#0000106&#0000097&#0000118&#0000097&
 #[test]
 fn js_injection_8_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_8).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_8).unwrap(),
         "foo"
     );
 }
@@ -454,7 +456,7 @@ fn js_injection_8_default() {
 #[test]
 fn js_injection_8_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_8).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_8).unwrap(),
         "foo"
     );
 }
@@ -462,7 +464,7 @@ fn js_injection_8_restricted() {
 #[test]
 fn js_injection_8_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_8).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_8).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -470,7 +472,7 @@ fn js_injection_8_basic() {
 #[test]
 fn js_injection_8_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_8).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_8).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -482,7 +484,7 @@ const JS_INJECTION_HTML_9: &str = "<a href=\"javascript&#x3A;\">foo</a>";
 #[test]
 fn js_injection_9_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_9).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_9).unwrap(),
         "foo"
     );
 }
@@ -490,7 +492,7 @@ fn js_injection_9_default() {
 #[test]
 fn js_injection_9_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_9).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_9).unwrap(),
         "foo"
     );
 }
@@ -498,7 +500,7 @@ fn js_injection_9_restricted() {
 #[test]
 fn js_injection_9_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_9).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_9).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -506,7 +508,7 @@ fn js_injection_9_basic() {
 #[test]
 fn js_injection_9_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_9).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_9).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -518,7 +520,7 @@ const JS_INJECTION_HTML_10: &str = "<a href=\"javascript&#x003A;\">foo</a>";
 #[test]
 fn js_injection_10_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_10).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_10).unwrap(),
         "foo"
     );
 }
@@ -526,7 +528,7 @@ fn js_injection_10_default() {
 #[test]
 fn js_injection_10_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_10).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_10).unwrap(),
         "foo"
     );
 }
@@ -534,7 +536,7 @@ fn js_injection_10_restricted() {
 #[test]
 fn js_injection_10_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_10).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_10).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -542,7 +544,7 @@ fn js_injection_10_basic() {
 #[test]
 fn js_injection_10_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_10).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_10).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -554,7 +556,7 @@ const JS_INJECTION_HTML_11: &str = "<a href=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&
 #[test]
 fn js_injection_11_default() {
     assert_eq!(
-        &sanitize_str(&default(), JS_INJECTION_HTML_11).unwrap(),
+        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_11).unwrap(),
         "foo"
     );
 }
@@ -562,7 +564,7 @@ fn js_injection_11_default() {
 #[test]
 fn js_injection_11_restricted() {
     assert_eq!(
-        &sanitize_str(&restricted(), JS_INJECTION_HTML_11).unwrap(),
+        &sanitize_str(&RESTRICTED, JS_INJECTION_HTML_11).unwrap(),
         "foo"
     );
 }
@@ -570,7 +572,7 @@ fn js_injection_11_restricted() {
 #[test]
 fn js_injection_11_basic() {
     assert_eq!(
-        &sanitize_str(&basic(), JS_INJECTION_HTML_11).unwrap(),
+        &sanitize_str(&BASIC, JS_INJECTION_HTML_11).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -578,7 +580,7 @@ fn js_injection_11_basic() {
 #[test]
 fn js_injection_11_relaxed() {
     assert_eq!(
-        &sanitize_str(&relaxed(), JS_INJECTION_HTML_11).unwrap(),
+        &sanitize_str(&RELAXED, JS_INJECTION_HTML_11).unwrap(),
         "<a>foo</a>"
     );
 }
@@ -588,7 +590,7 @@ fn js_injection_11_relaxed() {
 #[test]
 fn misc_1() {
     assert_eq!(
-        &sanitize_str(&default(), "Don&apos;t tas&eacute; me &amp; bro!").unwrap(),
+        &sanitize_str(&DEFAULT, "Don&apos;t tas&eacute; me &amp; bro!").unwrap(),
         "Don't tasé me &amp; bro!"
     );
 }
@@ -598,7 +600,7 @@ fn misc_1() {
 #[test]
 fn misc_2() {
     assert_eq!(
-        &sanitize_str(&default(), "cookies&sup2; & &frac14; cr&eacute;me").unwrap(),
+        &sanitize_str(&DEFAULT, "cookies&sup2; & &frac14; cr&eacute;me").unwrap(),
         "cookies² &amp; ¼ créme"
     );
 }
@@ -608,7 +610,7 @@ fn misc_2() {
 #[test]
 fn misc_3() {
     assert_eq!(
-        &sanitize_str(&default(), "<a href='&apos;' class=\"' &#39;\">IE6 isn't a real browser</a>").unwrap(),
+        &sanitize_str(&DEFAULT, "<a href='&apos;' class=\"' &#39;\">IE6 isn't a real browser</a>").unwrap(),
         "IE6 isn't a real browser"
     );
 }
@@ -618,7 +620,7 @@ fn misc_3() {
 #[test]
 fn misc_4() {
     assert_eq!(
-        &sanitize_str(&default(), "<img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\"><img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\"><img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\"><img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\">").unwrap(),
+        &sanitize_str(&DEFAULT, "<img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\"><img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\"><img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\"><img src=\"http://www.google.com/intl/en_ALL/images/logo.gif\">").unwrap(),
         ""
     );
 }
@@ -628,7 +630,7 @@ fn misc_4() {
 #[test]
 fn misc_5() {
     assert_eq!(
-        &sanitize_str(&default(), "foo<div>bar</div>baz").unwrap(),
+        &sanitize_str(&DEFAULT, "foo<div>bar</div>baz").unwrap(),
         "foo bar baz"
     );
 }
@@ -636,7 +638,7 @@ fn misc_5() {
 #[test]
 fn misc_6() {
     assert_eq!(
-        &sanitize_str(&default(), "foo<br>bar<br>baz").unwrap(),
+        &sanitize_str(&DEFAULT, "foo<br>bar<br>baz").unwrap(),
         "foo bar baz"
     );
 }
@@ -644,7 +646,7 @@ fn misc_6() {
 #[test]
 fn misc_7() {
     assert_eq!(
-        &sanitize_str(&default(), "foo<hr>bar<hr>baz").unwrap(),
+        &sanitize_str(&DEFAULT, "foo<hr>bar<hr>baz").unwrap(),
         "foo bar baz"
     );
 }

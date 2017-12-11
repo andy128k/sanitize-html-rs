@@ -1,22 +1,51 @@
-use super::{Rules, Element, Attribute};
+//! Predefined rules
+//! 
+//! These rules are inspired by a great Ruby gem [sanitize](https://github.com/rgrove/sanitize/).
 
-pub fn basic() -> Rules {
+use super::pattern::Pattern;
+use super::{Rules, Element};
+use regex::Regex;
+
+fn re(regex: &str) -> Pattern {
+    Pattern::regex(Regex::new(regex).unwrap())
+}
+
+fn href() -> Pattern {
+    re("^(ftp:|http:|https:|mailto:)") | !re("^[^/]+[[:space:]]*:")
+}
+
+fn src() -> Pattern {
+    re("^(http:|https:)") | !re("^[^/]+[[:space:]]*:")
+}
+
+lazy_static! {
+    /// Basic rules. Allows a variety of markup including formatting elements, links, and lists.
+    pub static ref BASIC: Rules = basic();
+
+    /// Default rules. Removes all tags.
+    pub static ref DEFAULT: Rules = default();
+
+    /// Relaxed rules. Allows an even wider variety of markup, including images and tables 
+    pub static ref RELAXED: Rules = relaxed();
+
+    /// Restricted rules. Allows only very simple inline markup. No links, images, or block elements.
+    pub static ref RESTRICTED: Rules = restricted();
+
+    /// Rules for document from untrusted sources. Removes all tags but text emphasizing and links.
+    pub static ref UNTRUSTED: Rules = untrusted();
+}
+
+fn basic() -> Rules {
     Rules::new()
         .element(Element::new("a")
-            .attribute(Attribute::new("href")
-                .should_match("^(ftp:|http:|https:|mailto:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("href", href())
         )
         .element(Element::new("abbr")
-            .attribute(Attribute::new("title"))
+            .attribute("title", Pattern::any())
         )
         .element(Element::new("b"))
         .element(Element::new("blockquote")
-            .attribute(Attribute::new("cite")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("cite", src())
         )
         .element(Element::new("br"))
         .element(Element::new("br"))
@@ -24,7 +53,7 @@ pub fn basic() -> Rules {
         .element(Element::new("code"))
         .element(Element::new("dd"))
         .element(Element::new("dfn")
-            .attribute(Attribute::new("title"))
+            .attribute("title", Pattern::any())
         )
         .element(Element::new("dl"))
         .element(Element::new("dt"))
@@ -37,10 +66,7 @@ pub fn basic() -> Rules {
         .element(Element::new("p"))
         .element(Element::new("pre"))
         .element(Element::new("q")
-            .attribute(Attribute::new("cite")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("cite", src())
         )
         .element(Element::new("s"))
         .element(Element::new("samp"))
@@ -50,8 +76,8 @@ pub fn basic() -> Rules {
         .element(Element::new("sub"))
         .element(Element::new("sup"))
         .element(Element::new("time")
-            .attribute(Attribute::new("datetime"))
-            .attribute(Attribute::new("pubdate"))
+            .attribute("datetime", Pattern::any())
+            .attribute("pubdate", Pattern::any())
         )
         .element(Element::new("u"))
         .element(Element::new("ul"))
@@ -74,7 +100,7 @@ pub fn basic() -> Rules {
         .space("section")
 }
 
-pub fn default() -> Rules {
+fn default() -> Rules {
     Rules::new()
         .space("address")
         .space("article")
@@ -104,50 +130,41 @@ pub fn default() -> Rules {
         .space("ul")
 }
 
-pub fn relaxed() -> Rules {
+fn relaxed() -> Rules {
     fn relaxed_element(name: &str) -> Element {
         Element::new(name)
-            .attribute(Attribute::new("dir"))
-            .attribute(Attribute::new("lang"))
-            .attribute(Attribute::new("title"))
-            .attribute(Attribute::new("class"))
+            .attribute("dir", Pattern::any())
+            .attribute("lang", Pattern::any())
+            .attribute("title", Pattern::any())
+            .attribute("class", Pattern::any())
     }
 
     Rules::new()
         .element(relaxed_element("a")
-            .attribute(Attribute::new("href")
-                .should_match("^(ftp:|http:|https:|mailto:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("href", href())
         )
         .element(relaxed_element("abbr"))
         .element(relaxed_element("b"))
         .element(relaxed_element("bdo"))
         .element(relaxed_element("blockquote")
-            .attribute(Attribute::new("cite")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("cite", src())
         )
         .element(relaxed_element("br"))
         .element(relaxed_element("caption"))
         .element(relaxed_element("cite"))
         .element(relaxed_element("code"))
         .element(relaxed_element("col")
-            .attribute(Attribute::new("span"))
-            .attribute(Attribute::new("width"))
+            .attribute("span", Pattern::any())
+            .attribute("width", Pattern::any())
         )
         .element(relaxed_element("colgroup")
-            .attribute(Attribute::new("span"))
-            .attribute(Attribute::new("width"))
+            .attribute("span", Pattern::any())
+            .attribute("width", Pattern::any())
         )
         .element(relaxed_element("dd"))
         .element(relaxed_element("del")
-            .attribute(Attribute::new("cite")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
-            .attribute(Attribute::new("datetime"))
+            .attribute("cite", src())
+            .attribute("datetime", Pattern::any())
         )
         .element(relaxed_element("dfn"))
         .element(relaxed_element("dl"))
@@ -164,37 +181,28 @@ pub fn relaxed() -> Rules {
         .element(relaxed_element("hgroup"))
         .element(relaxed_element("i"))
         .element(relaxed_element("img")
-            .attribute(Attribute::new("src")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
-            .attribute(Attribute::new("align"))
-            .attribute(Attribute::new("alt"))
-            .attribute(Attribute::new("width"))
-            .attribute(Attribute::new("height"))
+            .attribute("src", src())
+            .attribute("align", Pattern::any())
+            .attribute("alt", Pattern::any())
+            .attribute("width", Pattern::any())
+            .attribute("height", Pattern::any())
         )
         .element(relaxed_element("ins")
-            .attribute(Attribute::new("cite")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
-            .attribute(Attribute::new("datetime"))
+            .attribute("cite", src())
+            .attribute("datetime", Pattern::any())
         )
         .element(relaxed_element("kbd"))
         .element(relaxed_element("li"))
         .element(relaxed_element("mark"))
         .element(relaxed_element("ol")
-            .attribute(Attribute::new("start"))
-            .attribute(Attribute::new("reversed"))
-            .attribute(Attribute::new("type"))
+            .attribute("start", Pattern::any())
+            .attribute("reversed", Pattern::any())
+            .attribute("type", Pattern::any())
         )
         .element(relaxed_element("p"))
         .element(relaxed_element("pre"))
         .element(relaxed_element("q")
-            .attribute(Attribute::new("cite")
-                .should_match("^(http:|https:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("cite", src())
         )
         .element(relaxed_element("rp"))
         .element(relaxed_element("rt"))
@@ -207,35 +215,35 @@ pub fn relaxed() -> Rules {
         .element(relaxed_element("sub"))
         .element(relaxed_element("sup"))
         .element(relaxed_element("table")
-            .attribute(Attribute::new("summary"))
-            .attribute(Attribute::new("width"))
+            .attribute("summary", Pattern::any())
+            .attribute("width", Pattern::any())
         )
         .element(relaxed_element("tbody"))
         .element(relaxed_element("td")
-            .attribute(Attribute::new("abbr"))
-            .attribute(Attribute::new("axis"))
-            .attribute(Attribute::new("colspan"))
-            .attribute(Attribute::new("rowspan"))
-            .attribute(Attribute::new("width"))
+            .attribute("abbr", Pattern::any())
+            .attribute("axis", Pattern::any())
+            .attribute("colspan", Pattern::any())
+            .attribute("rowspan", Pattern::any())
+            .attribute("width", Pattern::any())
         )
         .element(relaxed_element("tfoot"))
         .element(relaxed_element("th")
-            .attribute(Attribute::new("abbr"))
-            .attribute(Attribute::new("axis"))
-            .attribute(Attribute::new("colspan"))
-            .attribute(Attribute::new("rowspan"))
-            .attribute(Attribute::new("scope"))
-            .attribute(Attribute::new("width"))
+            .attribute("abbr", Pattern::any())
+            .attribute("axis", Pattern::any())
+            .attribute("colspan", Pattern::any())
+            .attribute("rowspan", Pattern::any())
+            .attribute("scope", Pattern::any())
+            .attribute("width", Pattern::any())
         )
         .element(relaxed_element("thead"))
         .element(relaxed_element("time")
-            .attribute(Attribute::new("datetime"))
-            .attribute(Attribute::new("pubdate"))
+            .attribute("datetime", Pattern::any())
+            .attribute("pubdate", Pattern::any())
         )
         .element(relaxed_element("tr"))
         .element(relaxed_element("u"))
         .element(relaxed_element("ul")
-            .attribute(Attribute::new("type"))
+            .attribute("type", Pattern::any())
         )
         .element(relaxed_element("var"))
         .element(relaxed_element("wbr"))
@@ -250,7 +258,7 @@ pub fn relaxed() -> Rules {
         .space("section")
 }
 
-pub fn restricted() -> Rules {
+fn restricted() -> Rules {
     Rules::new()
         .element(Element::new("b"))
         .element(Element::new("em"))
@@ -285,13 +293,10 @@ pub fn restricted() -> Rules {
         .space("ul")
 }
 
-pub fn untrusted() -> Rules {
+fn untrusted() -> Rules {
     Rules::new()
         .element(Element::new("a")
-            .attribute(Attribute::new("href")
-                .should_match("^(ftp:|http:|https:|mailto:)").unwrap()
-                .should_not_match("^[^/]+[[:space:]]*:").unwrap()
-            )
+            .attribute("href", href())
             .mandatory_attribute("target", "_blank")
             .mandatory_attribute("rel", "noreferrer noopener")
         )

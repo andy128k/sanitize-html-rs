@@ -1,7 +1,4 @@
-use std::error;
 use std::default::Default;
-
-type StdResult<T> = Result<T, Box<error::Error>>;
 
 use html5ever::{parse_fragment, serialize};
 use html5ever::serialize::{SerializeOpts, TraversalScope};
@@ -11,6 +8,8 @@ use html5ever::tendril::TendrilSink;
 use html5ever::tokenizer::TokenizerOpts;
 use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::interface::QualName;
+
+use super::errors::SanitizeError;
 
 pub fn parse_bytes(input: &[u8]) -> RcDom {
     let opts = ParseOpts {
@@ -31,7 +30,7 @@ pub fn parse_bytes(input: &[u8]) -> RcDom {
         .one(input)
 }
 
-pub fn unparse_bytes(dom: RcDom) -> StdResult<Vec<u8>> {
+pub fn unparse_bytes(dom: RcDom) -> Result<Vec<u8>, SanitizeError> {
     let mut buf: Vec<u8> = Vec::new();
 
     let parent = QualName::new(Some(namespace_prefix!("html")), ns!(html), local_name!("div"));
@@ -42,7 +41,7 @@ pub fn unparse_bytes(dom: RcDom) -> StdResult<Vec<u8>> {
         create_missing_parent: false,
     };
 
-    serialize(&mut buf, &dom.document, opts)?;
+    serialize(&mut buf, &dom.document, opts).map_err(SanitizeError::SerializeError)?;
 
     Ok(buf)
 }
