@@ -4,6 +4,15 @@ use super::sanitize_str;
 use super::rules::{Element, Rules};
 use super::rules::predefined::*;
 
+#[test]
+fn empty() {
+    assert_eq!(&sanitize_str(&BASIC, "").unwrap(), "");
+    assert_eq!(&sanitize_str(&DEFAULT, "").unwrap(), "");
+    assert_eq!(&sanitize_str(&RELAXED, "").unwrap(), "");
+    assert_eq!(&sanitize_str(&RESTRICTED, "").unwrap(), "");
+    assert_eq!(&sanitize_str(&UNTRUSTED, "").unwrap(), "");
+}
+
 /* basic */
 
 const BASIC_HTML: &str = "<b>Lo<!-- comment -->rem</b> <a href=\"pants\" title=\"foo\">ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br/>amet <script>alert(\"hello world\");</script>";
