@@ -25,8 +25,8 @@ mod sanitize;
 mod parse;
 mod tests;
 
-use errors::SanitizeError;
-use rules::Rules;
+use crate::errors::SanitizeError;
+use crate::rules::Rules;
 
 /// Sanitize HTML bytes
 pub fn sanitize_bytes(rules: &Rules, input: &[u8]) -> Result<Vec<u8>, SanitizeError> {
