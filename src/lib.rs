@@ -14,11 +14,6 @@
 
 #![deny(missing_docs)]
 
-#[macro_use] extern crate failure;
-extern crate regex;
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate html5ever;
-
 pub mod errors;
 pub mod rules;
 mod sanitize;

@@ -1,6 +1,6 @@
 use std::default::Default;
 
-use html5ever::{parse_fragment, serialize};
+use html5ever::{parse_fragment, serialize, namespace_prefix, namespace_url, ns, local_name};
 use html5ever::serialize::{SerializeOpts, TraversalScope};
 use html5ever::driver::ParseOpts;
 use html5ever::rcdom::{RcDom};

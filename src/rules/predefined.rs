@@ -5,6 +5,7 @@
 use super::pattern::Pattern;
 use super::{Rules, Element};
 use regex::Regex;
+use lazy_static::lazy_static;
 
 fn re(regex: &str) -> Pattern {
     Pattern::regex(Regex::new(regex).unwrap())

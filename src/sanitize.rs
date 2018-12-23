@@ -1,13 +1,13 @@
 use std::mem;
 use std::rc::Rc;
 use std::cell::{Cell, RefCell};
-use html5ever;
 use html5ever::rcdom::{RcDom, Handle, Node};
 use html5ever::rcdom::NodeData;
 use html5ever::tree_builder::TreeSink;
 use html5ever::interface::tree_builder::NodeOrText;
 use html5ever::interface;
 use html5ever::tendril::StrTendril;
+use html5ever::{namespace_url, ns};
 
 use super::rules::{Rules, Element};
 
