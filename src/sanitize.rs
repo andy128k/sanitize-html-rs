@@ -66,9 +66,9 @@ fn element_action<'t>(element_name: &interface::QualName, rules: &'t Rules) -> E
     }
 }
 
-fn clean_nodes(dom: &mut RcDom, nodes: &Vec<Handle>, rules: &Rules) -> Vec<Handle> {
+fn clean_nodes(dom: &mut RcDom, nodes: &[Handle], rules: &Rules) -> Vec<Handle> {
     let mut result = Vec::new();
-    for node in nodes.iter() {
+    for node in nodes {
         let subnodes = clean_node(dom, node, rules);
         result.extend(subnodes);
     }
@@ -76,16 +76,16 @@ fn clean_nodes(dom: &mut RcDom, nodes: &Vec<Handle>, rules: &Rules) -> Vec<Handl
 }
 
 fn clean_node(dom: &mut RcDom, node: &Handle, rules: &Rules) -> Vec<Handle> {
-    match &node.data {
-        &NodeData::Document => vec![],
-        &NodeData::Doctype { .. } => vec![],
-        &NodeData::ProcessingInstruction { .. } => vec![],
+    match node.data {
+        NodeData::Document => vec![],
+        NodeData::Doctype { .. } => vec![],
+        NodeData::ProcessingInstruction { .. } => vec![],
 
-        &NodeData::Text { .. } => vec![node.clone()],
+        NodeData::Text { .. } => vec![node.clone()],
 
-        &NodeData::Comment { .. } => if rules.allow_comments { vec![node.clone()] } else { vec![] },
+        NodeData::Comment { .. } => if rules.allow_comments { vec![node.clone()] } else { vec![] },
 
-        &NodeData::Element { ref name, ref attrs, .. } => {
+        NodeData::Element { ref name, ref attrs, .. } => {
             match element_action(name, rules) {
                 ElementAction::Keep(element_sanitizer) => {
                     let mut new_attrs: Vec<interface::Attribute> = Vec::new();

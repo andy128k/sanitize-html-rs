@@ -27,7 +27,7 @@ use crate::rules::Rules;
 pub fn sanitize_bytes(rules: &Rules, input: &[u8]) -> Result<Vec<u8>, SanitizeError> {
     let mut dom = parse::parse_bytes(input);
     sanitize::sanitize_dom(&mut dom, rules);
-    let buf = parse::unparse_bytes(dom)?;
+    let buf = parse::unparse_bytes(&dom)?;
     Ok(buf)
 }
 
