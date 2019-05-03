@@ -1,6 +1,5 @@
 use std::mem;
-use std::rc::Rc;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use html5ever::rcdom::{RcDom, Handle, Node};
 use html5ever::rcdom::NodeData;
 use html5ever::tree_builder::TreeSink;
@@ -34,11 +33,9 @@ fn simple_element(dom: &mut RcDom, name: interface::QualName, attrs: Vec<interfa
 
 fn create_space_text() -> Handle {
     let contents = StrTendril::from(" ");
-    Rc::new(Node {
-        parent: Cell::new(None),
-        children: RefCell::new(Vec::new()),
-        data: NodeData::Text { contents: RefCell::new(contents) },
-    })
+    Node::new(
+        NodeData::Text { contents: RefCell::new(contents) }
+    )
 }
 
 enum ElementAction<'t> {
