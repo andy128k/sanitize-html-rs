@@ -22,7 +22,7 @@
 use regex::Regex;
 
 /// Value pattern
-pub struct Pattern(pub Box<dyn Fn(&str) -> bool + Sync>);
+pub struct Pattern(pub Box<dyn Fn(&str) -> bool + Sync + Send>);
 
 impl Pattern {
     /// Creates pattern which accepts any value.
