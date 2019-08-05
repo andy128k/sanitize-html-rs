@@ -15,4 +15,4 @@ travis-ci = { repository = "andy128k/sanitize-html-rs", branch = "master" }
 [dependencies]
 regex = "1"
 lazy_static = "1"
-html5ever = "0.23"
+html5ever = "0.24"
