@@ -129,6 +129,12 @@ fn default() -> Rules {
         .space("pre")
         .space("section")
         .space("ul")
+        .delete("iframe")
+        .delete("noembed")
+        .delete("noframes")
+        .delete("noscript")
+        .delete("script")
+        .delete("style")
 }
 
 fn relaxed() -> Rules {
@@ -349,6 +355,7 @@ mod tests {
         let rules = default();
         assert_eq!(rules.allowed_elements.len(), 0);
         assert_eq!(rules.space_elements.len(), 26);
+        assert_eq!(rules.delete_elements.len(), 6);
     }
 
     #[test]
