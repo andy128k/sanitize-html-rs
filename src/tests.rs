@@ -21,7 +21,7 @@ const BASIC_HTML: &str = "<b>Lo<!-- comment -->rem</b> <a href=\"pants\" title=\
 fn basic_default() {
     assert_eq!(
         &sanitize_str(&DEFAULT, BASIC_HTML).unwrap(),
-        "Lorem ipsum dolor sit amet alert(\"hello world\");"
+        "Lorem ipsum dolor sit amet "
     );
 }
 
@@ -57,7 +57,7 @@ const MALFORMED_HTML: &str = "Lo<!-- comment -->rem</b> <a href=pants title=\"fo
 fn malformed_default() {
     assert_eq!(
         &sanitize_str(&DEFAULT, MALFORMED_HTML).unwrap(),
-        "Lorem dolor sit amet alert(\"hello world\");"
+        "Lorem dolor sit amet "
     );
 }
 
