@@ -50,6 +50,7 @@ impl Element {
 }
 
 /// structure to describe sanitization rules
+#[derive(Default)]
 pub struct Rules {
     /// Determines if comments are kept of stripped out of a document.
     pub allow_comments: bool,
@@ -66,13 +67,7 @@ pub struct Rules {
 impl Rules {
     /// Creates a new rules set.
     pub fn new() -> Self {
-        Self {
-            allow_comments: false,
-            allowed_elements: HashMap::new(),
-            delete_elements: HashSet::new(),
-            space_elements: HashSet::new(),
-            rename_elements: HashMap::new(),
-        }
+        Self::default()
     }
 
     /// Sets if comments are allowed

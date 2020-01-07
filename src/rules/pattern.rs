@@ -2,9 +2,6 @@
 //! 
 //! # Examples
 //! ```
-//! # extern crate sanitize_html;
-//! # extern crate regex;
-//! # fn main() {
 //! use sanitize_html::rules::pattern::Pattern;
 //! use regex::Regex;
 //!
@@ -15,9 +12,7 @@
 //! assert!(href.matches("http://foo.com/"));
 //! assert!(href.matches(" filename with spaces .zip "));
 //! assert!(!href.matches(" javascript  : window.location = '//example.com/'")); // Attempt to make XSS
-//! # }
 //! ```
-//!
 
 use regex::Regex;
 
@@ -29,16 +24,12 @@ impl Pattern {
     /// 
     /// # Example
     /// ```
-    /// # extern crate sanitize_html;
-    /// # extern crate regex;
     /// use sanitize_html::rules::pattern::Pattern;
-    /// # fn main() {
     /// use regex::Regex;
     ///
     /// let pattern = Pattern::any();
     /// assert!(pattern.matches(""));
     /// assert!(pattern.matches("pants"));
-    /// # }
     /// ```
     pub fn any() -> Self {
         Pattern(Box::new(move |_value| true))
@@ -48,16 +39,12 @@ impl Pattern {
     /// 
     /// # Example
     /// ```
-    /// # extern crate sanitize_html;
-    /// # extern crate regex;
     /// use sanitize_html::rules::pattern::Pattern;
-    /// # fn main() {
     /// use regex::Regex;
     ///
     /// let pattern = Pattern::regex(Regex::new("ant").unwrap());
     /// assert!(!pattern.matches(""));
     /// assert!(pattern.matches("pants"));
-    /// # }
     /// ```
     pub fn regex(re: Regex) -> Self {
         Pattern(Box::new(move |value| re.is_match(value)))
@@ -76,16 +63,12 @@ impl ::std::ops::Not for Pattern {
     /// 
     /// # Example
     /// ```
-    /// # extern crate sanitize_html;
-    /// # extern crate regex;
     /// use sanitize_html::rules::pattern::Pattern;
-    /// # fn main() {
     /// use regex::Regex;
     ///
     /// let pattern = !Pattern::any();
     /// assert!(!pattern.matches(""));
     /// assert!(!pattern.matches("pants"));
-    /// # }
     /// ```
     fn not(self) -> Self::Output {
         let cb = self.0;
@@ -100,10 +83,7 @@ impl ::std::ops::BitAnd for Pattern {
     /// 
     /// # Example
     /// ```
-    /// # extern crate sanitize_html;
-    /// # extern crate regex;
     /// use sanitize_html::rules::pattern::Pattern;
-    /// # fn main() {
     /// use regex::Regex;
     ///
     /// let pan = Pattern::regex(Regex::new("pan").unwrap());
@@ -113,7 +93,6 @@ impl ::std::ops::BitAnd for Pattern {
     /// assert!(!pattern.matches("pan"));
     /// assert!(!pattern.matches("ant"));
     /// assert!(pattern.matches("pants"));
-    /// # }
     /// ```
     fn bitand(self, rhs: Pattern) -> Self::Output {
         let cb1 = self.0;
@@ -129,10 +108,7 @@ impl ::std::ops::BitOr for Pattern {
     /// 
     /// # Example
     /// ```
-    /// # extern crate sanitize_html;
-    /// # extern crate regex;
     /// use sanitize_html::rules::pattern::Pattern;
-    /// # fn main() {
     /// use regex::Regex;
     ///
     /// let pan = Pattern::regex(Regex::new("pan").unwrap());
@@ -142,7 +118,6 @@ impl ::std::ops::BitOr for Pattern {
     /// assert!(pattern.matches("pants"));
     /// assert!(pattern.matches("pot"));
     /// assert!(!pattern.matches("jar"));
-    /// # }
     /// ```
     fn bitor(self, rhs: Pattern) -> Self::Output {
         let cb1 = self.0;
