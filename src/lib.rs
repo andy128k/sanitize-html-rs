@@ -25,15 +25,18 @@ use crate::rules::Rules;
 
 /// Sanitize HTML bytes
 pub fn sanitize_bytes(rules: &Rules, input: &[u8]) -> Result<Vec<u8>, SanitizeError> {
-    let mut dom = parse::parse_bytes(input);
-    sanitize::sanitize_dom(&mut dom, rules);
-    let buf = parse::unparse_bytes(&dom)?;
-    Ok(buf)
+    let input_str = std::str::from_utf8(input).map_err(SanitizeError::StrUtf8Error)?;
+    let dom = parse::parse_str(input_str);
+    let new_dom = sanitize::sanitize_dom(&dom, rules);
+    let result_bytes = parse::unparse_bytes(&new_dom)?;
+    Ok(result_bytes)
 }
 
 /// Sanitize HTML string
 pub fn sanitize_str(rules: &Rules, input: &str) -> Result<String, SanitizeError> {
-    let result_bytes = sanitize_bytes(rules, input.as_bytes())?;
+    let dom = parse::parse_str(input);
+    let new_dom = sanitize::sanitize_dom(&dom, rules);
+    let result_bytes = parse::unparse_bytes(&new_dom)?;
     let result_string = String::from_utf8(result_bytes).map_err(SanitizeError::Utf8Error)?;
     Ok(result_string)
 }

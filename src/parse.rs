@@ -1,36 +1,23 @@
+use super::errors::SanitizeError;
+use html5ever::{
+    interface::QualName,
+    local_name, namespace_prefix, namespace_url, ns, serialize,
+    serialize::{SerializeOpts, TraversalScope},
+    tendril::TendrilSink,
+};
+use kuchiki::{parse_html_with_options, NodeRef, ParseOpts};
 use std::default::Default;
 
-use html5ever::{parse_fragment, serialize, namespace_prefix, namespace_url, ns, local_name};
-use html5ever::serialize::{SerializeOpts, TraversalScope};
-use html5ever::driver::ParseOpts;
-use html5ever::rcdom::{RcDom};
-use html5ever::tendril::TendrilSink;
-use html5ever::tokenizer::TokenizerOpts;
-use html5ever::tree_builder::TreeBuilderOpts;
-use html5ever::interface::QualName;
+pub(crate) fn parse_str(input: &str) -> NodeRef {
+    let mut opts = ParseOpts::default();
+    opts.tree_builder.drop_doctype = true;
 
-use super::errors::SanitizeError;
-
-pub fn parse_bytes(input: &[u8]) -> RcDom {
-    let opts = ParseOpts {
-        tokenizer: TokenizerOpts {
-            ..Default::default()
-        },
-        tree_builder: TreeBuilderOpts {
-            drop_doctype: true,
-            ..Default::default()
-        },
-    };
-
-    let context_name = QualName::new(Some(namespace_prefix!("html")), ns!(html), local_name!("body"));
-    let context_attrs = Vec::new();
-
-    parse_fragment(RcDom::default(), opts, context_name, context_attrs)
-        .from_utf8()
-        .one(input)
+    let mut parser = parse_html_with_options(opts);
+    parser.process(input.into());
+    parser.finish()
 }
 
-pub fn unparse_bytes(dom: &RcDom) -> Result<Vec<u8>, SanitizeError> {
+pub(crate) fn unparse_bytes(dom: &NodeRef) -> Result<Vec<u8>, SanitizeError> {
     let mut buf: Vec<u8> = Vec::new();
 
     let parent = QualName::new(Some(namespace_prefix!("html")), ns!(html), local_name!("div"));
@@ -41,7 +28,7 @@ pub fn unparse_bytes(dom: &RcDom) -> Result<Vec<u8>, SanitizeError> {
         create_missing_parent: false,
     };
 
-    serialize(&mut buf, &dom.document, opts).map_err(SanitizeError::SerializeError)?;
+    serialize(&mut buf, dom, opts).map_err(SanitizeError::SerializeError)?;
 
     Ok(buf)
 }
