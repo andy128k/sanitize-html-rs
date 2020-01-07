@@ -1,6 +1,6 @@
-use html5ever::{interface::QualName, LocalName, namespace_url, ns};
-use kuchiki::{NodeRef, NodeData, ElementData, ExpandedName, Attribute};
-use crate::rules::{Rules, Element};
+use crate::rules::{Element, Rules};
+use html5ever::{interface::QualName, namespace_url, ns, LocalName};
+use kuchiki::{Attribute, ElementData, ExpandedName, NodeData, NodeRef};
 
 fn simple_qual_name(name: &str) -> QualName {
     QualName::new(None, ns!(), LocalName::from(name))
@@ -82,22 +82,35 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
 
         NodeData::Text(..) => vec![node.clone()],
 
-        NodeData::Comment(..) => if rules.allow_comments { vec![node.clone()] } else { vec![] },
+        NodeData::Comment(..) => {
+            if rules.allow_comments {
+                vec![node.clone()]
+            } else {
+                vec![]
+            }
+        }
 
-        NodeData::Element(ElementData { ref name, ref attributes, .. }) => {
+        NodeData::Element(ElementData {
+            ref name,
+            ref attributes,
+            ..
+        }) => {
             match element_action(name, rules) {
                 ElementAction::Keep(element_sanitizer) => {
                     let mut new_attrs: Vec<(ExpandedName, Attribute)> = Vec::new();
 
                     /* whitelisted attributes */
                     for (attr_name, attr_value) in attributes.borrow().map.iter() {
-                        if element_sanitizer.is_valid(&expanded_name_to_string(attr_name), &attr_value.value) {
+                        if element_sanitizer
+                            .is_valid(&expanded_name_to_string(attr_name), &attr_value.value)
+                        {
                             new_attrs.push((attr_name.clone(), attr_value.clone()));
                         }
                     }
 
                     /* mandatory attributes */
-                    let mut mandatory_attributes: Vec<(&String, &String)> = element_sanitizer.mandatory_attributes.iter().collect();
+                    let mut mandatory_attributes: Vec<(&String, &String)> =
+                        element_sanitizer.mandatory_attributes.iter().collect();
                     mandatory_attributes.sort();
                     for &(attr_name, attr_value) in mandatory_attributes.iter() {
                         new_attrs.push((
@@ -113,7 +126,7 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
                     let element = simple_element(name.clone(), new_attrs, children);
 
                     vec![element]
-                },
+                }
 
                 ElementAction::Delete => vec![],
 
@@ -128,16 +141,18 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
                         nodes.push(create_space_text());
                     }
                     nodes
-                },
+                }
 
                 ElementAction::Rename(rename_to) => {
                     let children = clean_nodes(node.children(), rules);
-                    vec![
-                        simple_element(simple_qual_name(rename_to), Vec::new(), children),
-                    ]
-                },
+                    vec![simple_element(
+                        simple_qual_name(rename_to),
+                        Vec::new(),
+                        children,
+                    )]
+                }
             }
-        },
+        }
     }
 }
 

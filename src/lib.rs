@@ -1,13 +1,13 @@
 //! HTML Sanitization library
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```
 //! use sanitize_html::sanitize_str;
 //! use sanitize_html::rules::predefined::DEFAULT;
-//! 
+//!
 //! let input = "<b>Lo<!-- comment -->rem</b> <a href=\"pants\" title=\"foo\">ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br/>amet <script>alert(\"hello world\");</script>";
-//! 
+//!
 //! let sanitized_default: String = sanitize_str(&DEFAULT, input).unwrap();
 //! assert_eq!(&sanitized_default, "Lorem ipsum dolor sit amet ");
 //! ```
@@ -15,9 +15,9 @@
 #![deny(missing_docs)]
 
 pub mod errors;
+mod parse;
 pub mod rules;
 mod sanitize;
-mod parse;
 mod tests;
 
 use crate::errors::SanitizeError;

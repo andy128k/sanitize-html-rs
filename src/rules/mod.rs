@@ -3,9 +3,9 @@
 pub mod pattern;
 pub mod predefined;
 
+use self::pattern::Pattern;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use self::pattern::Pattern;
 
 /// structure to describe HTML element
 pub struct Element {
@@ -36,7 +36,8 @@ impl Element {
 
     /// Adds mandatory attribute
     pub fn mandatory_attribute(mut self, attribute: &str, value: &str) -> Self {
-        self.mandatory_attributes.insert(attribute.to_owned(), value.to_owned());
+        self.mandatory_attributes
+            .insert(attribute.to_owned(), value.to_owned());
         self
     }
 
@@ -96,7 +97,8 @@ impl Rules {
 
     /// Adds a rule to rename an element
     pub fn rename(mut self, element_name: &str, to: &str) -> Self {
-        self.rename_elements.insert(element_name.to_owned(), to.to_owned());
+        self.rename_elements
+            .insert(element_name.to_owned(), to.to_owned());
         self
     }
 }

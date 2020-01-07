@@ -20,7 +20,11 @@ pub(crate) fn parse_str(input: &str) -> NodeRef {
 pub(crate) fn unparse_bytes(dom: &NodeRef) -> Result<Vec<u8>, SanitizeError> {
     let mut buf: Vec<u8> = Vec::new();
 
-    let parent = QualName::new(Some(namespace_prefix!("html")), ns!(html), local_name!("div"));
+    let parent = QualName::new(
+        Some(namespace_prefix!("html")),
+        ns!(html),
+        local_name!("div"),
+    );
 
     let opts = SerializeOpts {
         scripting_enabled: false,

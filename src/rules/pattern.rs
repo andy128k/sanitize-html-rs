@@ -1,5 +1,5 @@
 //! This module contains code dedicated to check validity of attribute's value.
-//! 
+//!
 //! # Examples
 //! ```
 //! use sanitize_html::rules::pattern::Pattern;
@@ -21,7 +21,7 @@ pub struct Pattern(pub Box<dyn Fn(&str) -> bool + Sync + Send>);
 
 impl Pattern {
     /// Creates pattern which accepts any value.
-    /// 
+    ///
     /// # Example
     /// ```
     /// use sanitize_html::rules::pattern::Pattern;
@@ -36,7 +36,7 @@ impl Pattern {
     }
 
     /// Creates pattern which uses regular expression to check a value. Panics
-    /// 
+    ///
     /// # Example
     /// ```
     /// use sanitize_html::rules::pattern::Pattern;
@@ -60,7 +60,7 @@ impl ::std::ops::Not for Pattern {
     type Output = Pattern;
 
     /// Negates pattern
-    /// 
+    ///
     /// # Example
     /// ```
     /// use sanitize_html::rules::pattern::Pattern;
@@ -80,7 +80,7 @@ impl ::std::ops::BitAnd for Pattern {
     type Output = Pattern;
 
     /// Combines two patterns into a pattern which matches a string iff both patterns match that string.
-    /// 
+    ///
     /// # Example
     /// ```
     /// use sanitize_html::rules::pattern::Pattern;
@@ -89,7 +89,7 @@ impl ::std::ops::BitAnd for Pattern {
     /// let pan = Pattern::regex(Regex::new("pan").unwrap());
     /// let ant = Pattern::regex(Regex::new("ant").unwrap());
     /// let pattern = pan & ant;
-    /// 
+    ///
     /// assert!(!pattern.matches("pan"));
     /// assert!(!pattern.matches("ant"));
     /// assert!(pattern.matches("pants"));
@@ -105,7 +105,7 @@ impl ::std::ops::BitOr for Pattern {
     type Output = Pattern;
 
     /// Combines two patterns into a pattern which matches a string if one of patterns matches that string.
-    /// 
+    ///
     /// # Example
     /// ```
     /// use sanitize_html::rules::pattern::Pattern;
@@ -114,7 +114,7 @@ impl ::std::ops::BitOr for Pattern {
     /// let pan = Pattern::regex(Regex::new("pan").unwrap());
     /// let pot = Pattern::regex(Regex::new("pot").unwrap());
     /// let pattern = pan | pot;
-    /// 
+    ///
     /// assert!(pattern.matches("pants"));
     /// assert!(pattern.matches("pot"));
     /// assert!(!pattern.matches("jar"));

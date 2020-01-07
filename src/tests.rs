@@ -1,8 +1,8 @@
 #![cfg(test)]
 
-use super::sanitize_str;
-use super::rules::{Element, Rules};
 use super::rules::predefined::*;
+use super::rules::{Element, Rules};
+use super::sanitize_str;
 
 #[test]
 fn empty() {
@@ -73,7 +73,7 @@ fn malformed_restricted() {
 fn malformed_basic() {
     assert_eq!(
         &sanitize_str(&BASIC, MALFORMED_HTML).unwrap(),
-       "Lorem <a href=\"pants\"><strong>dolor</strong></a> sit<br>amet alert(\"hello world\");"
+        "Lorem <a href=\"pants\"><strong>dolor</strong></a> sit<br>amet alert(\"hello world\");"
     );
 }
 
@@ -91,18 +91,12 @@ const UNCLOSED_HTML: &str = "<p>a</p><blockquote>b";
 
 #[test]
 fn unclosed_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, UNCLOSED_HTML).unwrap(),
-        " a  b "
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, UNCLOSED_HTML).unwrap(), " a  b ");
 }
 
 #[test]
 fn unclosed_restricted() {
-    assert_eq!(
-        &sanitize_str(&RESTRICTED, UNCLOSED_HTML).unwrap(),
-        " a  b "
-    );
+    assert_eq!(&sanitize_str(&RESTRICTED, UNCLOSED_HTML).unwrap(), " a  b ");
 }
 
 #[test]
@@ -171,10 +165,7 @@ const RAW_COMMENT_HTML: &str = "<!-- comment -->Hello";
 
 #[test]
 fn raw_comment_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, RAW_COMMENT_HTML).unwrap(),
-        "Hello"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, RAW_COMMENT_HTML).unwrap(), "Hello");
 }
 
 #[test]
@@ -192,10 +183,7 @@ fn raw_comment_basic() {
 
 #[test]
 fn raw_comment_relaxed() {
-    assert_eq!(
-        &sanitize_str(&RELAXED, RAW_COMMENT_HTML).unwrap(),
-        "Hello"
-    );
+    assert_eq!(&sanitize_str(&RELAXED, RAW_COMMENT_HTML).unwrap(), "Hello");
 }
 
 /* protocol-based JS injection: simple, no spaces */
@@ -204,10 +192,7 @@ const JS_INJECTION_HTML_1: &str = "<a href=\"javascript:alert(\'XSS\');\">foo</a
 
 #[test]
 fn js_injection_1_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_1).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_1).unwrap(), "foo");
 }
 
 #[test]
@@ -240,10 +225,7 @@ const JS_INJECTION_HTML_2: &str = "<a href=\"javascript :alert(\'XSS\');\">foo</
 
 #[test]
 fn js_injection_2_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_2).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_2).unwrap(), "foo");
 }
 
 #[test]
@@ -276,10 +258,7 @@ const JS_INJECTION_HTML_3: &str = "<a href=\"javascript: alert(\'XSS\');\">foo</
 
 #[test]
 fn js_injection_3_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_3).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_3).unwrap(), "foo");
 }
 
 #[test]
@@ -312,10 +291,7 @@ const JS_INJECTION_HTML_4: &str = "<a href=\"javascript : alert(\'XSS\');\">foo<
 
 #[test]
 fn js_injection_4_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_4).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_4).unwrap(), "foo");
 }
 
 #[test]
@@ -348,10 +324,7 @@ const JS_INJECTION_HTML_5: &str = "<a href=\":javascript:alert(\'XSS\');\">foo</
 
 #[test]
 fn js_injection_5_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_5).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_5).unwrap(), "foo");
 }
 
 #[test]
@@ -384,10 +357,7 @@ const JS_INJECTION_HTML_6: &str = "<a href=\"javascript&#58;\">foo</a>";
 
 #[test]
 fn js_injection_6_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_6).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_6).unwrap(), "foo");
 }
 
 #[test]
@@ -420,10 +390,7 @@ const JS_INJECTION_HTML_7: &str = "<a href=\"javascript&#0058;\">foo</a>";
 
 #[test]
 fn js_injection_7_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_7).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_7).unwrap(), "foo");
 }
 
 #[test]
@@ -456,10 +423,7 @@ const JS_INJECTION_HTML_8: &str = "<a href=&#0000106&#0000097&#0000118&#0000097&
 
 #[test]
 fn js_injection_8_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_8).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_8).unwrap(), "foo");
 }
 
 #[test]
@@ -492,10 +456,7 @@ const JS_INJECTION_HTML_9: &str = "<a href=\"javascript&#x3A;\">foo</a>";
 
 #[test]
 fn js_injection_9_default() {
-    assert_eq!(
-        &sanitize_str(&DEFAULT, JS_INJECTION_HTML_9).unwrap(),
-        "foo"
-    );
+    assert_eq!(&sanitize_str(&DEFAULT, JS_INJECTION_HTML_9).unwrap(), "foo");
 }
 
 #[test]
@@ -619,7 +580,11 @@ fn misc_2() {
 #[test]
 fn misc_3() {
     assert_eq!(
-        &sanitize_str(&DEFAULT, "<a href='&apos;' class=\"' &#39;\">IE6 isn't a real browser</a>").unwrap(),
+        &sanitize_str(
+            &DEFAULT,
+            "<a href='&apos;' class=\"' &#39;\">IE6 isn't a real browser</a>"
+        )
+        .unwrap(),
         "IE6 isn't a real browser"
     );
 }
@@ -669,8 +634,7 @@ fn custom_rules() {
         .delete("script")
         .delete("style")
         .space("br")
-        .rename("strong", "span")
-    ;
+        .rename("strong", "span");
 
     let html = "<b>Lo<!-- comment -->rem</b> <a href=\"javascript:pants\" title=\"foo\">ipsum</a> <a href=\"http://foo.com/\"><strong>dolor</strong></a> sit<br/>amet <script>alert(\"hello world\")</script>";
 
