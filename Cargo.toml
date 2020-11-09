@@ -9,9 +9,6 @@ homepage = "https://github.com/andy128k/sanitize-html-rs"
 repository = "https://github.com/andy128k/sanitize-html-rs.git"
 edition = "2018"
 
-[badges]
-travis-ci = { repository = "andy128k/sanitize-html-rs", branch = "master" }
-
 [dependencies]
 regex = "1"
 lazy_static = "1"
