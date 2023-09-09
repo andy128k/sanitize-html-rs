@@ -22,21 +22,22 @@ mod tests;
 
 use crate::errors::SanitizeError;
 use crate::rules::Rules;
+use std::error::Error;
 
 /// Sanitize HTML bytes
 pub fn sanitize_bytes(rules: &Rules, input: &[u8]) -> Result<Vec<u8>, SanitizeError> {
-    let input_str = std::str::from_utf8(input).map_err(SanitizeError::StrUtf8Error)?;
-    let dom = parse::parse_str(input_str);
-    let new_dom = sanitize::sanitize_dom(&dom, rules);
-    let result_bytes = parse::unparse_bytes(&new_dom)?;
-    Ok(result_bytes)
+    fn inner(rules: &Rules, input: &[u8]) -> Result<Vec<u8>, Box<dyn Error>> {
+        let dom = parse::parse_dom(input)?;
+        let new_document = sanitize::sanitize_dom(&dom, rules);
+        let result_bytes = parse::unparse_document(&new_document)?;
+        Ok(result_bytes)
+    }
+    inner(rules, input).map_err(SanitizeError)
 }
 
 /// Sanitize HTML string
 pub fn sanitize_str(rules: &Rules, input: &str) -> Result<String, SanitizeError> {
-    let dom = parse::parse_str(input);
-    let new_dom = sanitize::sanitize_dom(&dom, rules);
-    let result_bytes = parse::unparse_bytes(&new_dom)?;
-    let result_string = String::from_utf8(result_bytes).map_err(SanitizeError::Utf8Error)?;
+    let result_bytes = sanitize_bytes(rules, input.as_bytes())?;
+    let result_string = String::from_utf8(result_bytes).map_err(|e| SanitizeError(Box::new(e)))?;
     Ok(result_string)
 }

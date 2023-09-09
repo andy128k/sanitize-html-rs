@@ -1,6 +1,9 @@
 use crate::rules::{Element, Rules};
-use html5ever::{interface::QualName, namespace_url, ns, LocalName};
-use kuchiki::{Attribute, ElementData, ExpandedName, NodeData, NodeRef};
+use html5ever::{
+    interface::QualName, namespace_url, ns, tendril::StrTendril, Attribute, LocalName,
+};
+use markup5ever_rcdom::{Node, NodeData, RcDom};
+use std::{cell::RefCell, rc::Rc};
 
 fn simple_qual_name(name: &str) -> QualName {
     QualName::new(None, ns!(), LocalName::from(name))
@@ -14,29 +17,21 @@ fn qual_name_to_string(name: &QualName) -> String {
     }
 }
 
-fn expanded_name_to_string(name: &ExpandedName) -> String {
-    if name.ns == ns!(html) || name.ns.is_empty() {
-        name.local.to_lowercase()
-    } else {
-        format!("{}:{}", name.ns.to_lowercase(), name.local.to_lowercase())
-    }
-}
-
-fn simple_element(
-    name: QualName,
-    attrs: Vec<(ExpandedName, Attribute)>,
-    children: Vec<NodeRef>,
-) -> NodeRef {
-    let element = NodeRef::new_element(name, attrs);
-    for child in children {
-        child.detach();
-        element.append(child);
-    }
+fn simple_element(name: QualName, attrs: Vec<Attribute>, children: Vec<Rc<Node>>) -> Rc<Node> {
+    let element = Node::new(NodeData::Element {
+        name,
+        attrs: RefCell::new(attrs),
+        template_contents: Default::default(),
+        mathml_annotation_xml_integration_point: Default::default(),
+    });
+    element.children.borrow_mut().extend(children);
     element
 }
 
-fn create_space_text() -> NodeRef {
-    NodeRef::new_text(" ")
+fn create_space_text() -> Rc<Node> {
+    Node::new(NodeData::Text {
+        contents: RefCell::new(" ".into()),
+    })
 }
 
 enum ElementAction<'t> {
@@ -64,25 +59,22 @@ fn element_action<'t>(element_name: &QualName, rules: &'t Rules) -> ElementActio
     }
 }
 
-fn clean_nodes(nodes: impl IntoIterator<Item = NodeRef>, rules: &Rules) -> Vec<NodeRef> {
-    let mut result = Vec::new();
-    for node in nodes {
-        let subnodes = clean_node(&node, rules);
-        result.extend(subnodes);
-    }
-    result
+fn clean_nodes(nodes: &[Rc<Node>], rules: &Rules) -> Vec<Rc<Node>> {
+    nodes
+        .iter()
+        .flat_map(|node| clean_node(node, rules))
+        .collect()
 }
 
-fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
-    match node.data() {
-        NodeData::Document(..) => vec![],
-        NodeData::DocumentFragment => vec![], // TODO: ??
-        NodeData::Doctype(..) => vec![],
-        NodeData::ProcessingInstruction(..) => vec![],
+fn clean_node(node: &Rc<Node>, rules: &Rules) -> Vec<Rc<Node>> {
+    match node.data {
+        NodeData::Document => vec![],
+        NodeData::Doctype { .. } => vec![],
+        NodeData::ProcessingInstruction { .. } => vec![],
 
-        NodeData::Text(..) => vec![node.clone()],
+        NodeData::Text { .. } => vec![node.clone()],
 
-        NodeData::Comment(..) => {
+        NodeData::Comment { .. } => {
             if rules.allow_comments {
                 vec![node.clone()]
             } else {
@@ -90,21 +82,20 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
             }
         }
 
-        NodeData::Element(ElementData {
+        NodeData::Element {
             ref name,
-            ref attributes,
+            ref attrs,
             ..
-        }) => {
+        } => {
             match element_action(name, rules) {
                 ElementAction::Keep(element_sanitizer) => {
-                    let mut new_attrs: Vec<(ExpandedName, Attribute)> = Vec::new();
+                    let mut new_attrs: Vec<Attribute> = Vec::new();
 
-                    /* whitelisted attributes */
-                    for (attr_name, attr_value) in attributes.borrow().map.iter() {
-                        if element_sanitizer
-                            .is_valid(&expanded_name_to_string(attr_name), &attr_value.value)
+                    /* allowlisted attributes */
+                    for attr in attrs.borrow().iter() {
+                        if element_sanitizer.is_valid(&qual_name_to_string(&attr.name), &attr.value)
                         {
-                            new_attrs.push((attr_name.clone(), attr_value.clone()));
+                            new_attrs.push(attr.clone());
                         }
                     }
 
@@ -113,16 +104,17 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
                         element_sanitizer.mandatory_attributes.iter().collect();
                     mandatory_attributes.sort();
                     for &(attr_name, attr_value) in mandatory_attributes.iter() {
-                        new_attrs.push((
-                            ExpandedName::new(ns!(), LocalName::from(attr_name.as_str())),
-                            Attribute {
+                        new_attrs.push(Attribute {
+                            name: QualName {
                                 prefix: None,
-                                value: attr_value.into(),
+                                ns: ns!(),
+                                local: LocalName::from(attr_name.as_str()),
                             },
-                        ));
+                            value: StrTendril::from(attr_value.as_str()),
+                        });
                     }
 
-                    let children = clean_nodes(node.children(), rules);
+                    let children = clean_nodes(&node.children.borrow(), rules);
                     let element = simple_element(name.clone(), new_attrs, children);
 
                     vec![element]
@@ -130,10 +122,10 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
 
                 ElementAction::Delete => vec![],
 
-                ElementAction::Elide => clean_nodes(node.children(), rules),
+                ElementAction::Elide => clean_nodes(&node.children.borrow(), rules),
 
                 ElementAction::Space => {
-                    let mut nodes = clean_nodes(node.children(), rules);
+                    let mut nodes = clean_nodes(&node.children.borrow(), rules);
                     if nodes.is_empty() {
                         nodes.push(create_space_text());
                     } else {
@@ -144,7 +136,7 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
                 }
 
                 ElementAction::Rename(rename_to) => {
-                    let children = clean_nodes(node.children(), rules);
+                    let children = clean_nodes(&node.children.borrow(), rules);
                     vec![simple_element(
                         simple_qual_name(rename_to),
                         Vec::new(),
@@ -156,12 +148,10 @@ fn clean_node(node: &NodeRef, rules: &Rules) -> Vec<NodeRef> {
     }
 }
 
-pub(crate) fn sanitize_dom(dom: &NodeRef, mode: &Rules) -> NodeRef {
-    let new_children = clean_nodes(dom.children(), mode);
-    let new_dom = NodeRef::new_document();
-    for child in new_children {
-        child.detach();
-        new_dom.append(child);
-    }
+pub(crate) fn sanitize_dom(dom: &RcDom, mode: &Rules) -> Rc<Node> {
+    let new_children = clean_nodes(&dom.document.children.borrow(), mode);
+
+    let new_dom = Node::new(NodeData::Document);
+    new_dom.children.borrow_mut().extend(new_children);
     new_dom
 }
