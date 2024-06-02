@@ -11,7 +11,7 @@ use std::collections::HashSet;
 pub struct Element {
     /// name of an element
     pub name: String,
-    /// Whitelist of allowed attributes
+    /// List of allowed attributes
     pub attributes: HashMap<String, Pattern>,
     /// List of mandatory atributes and their values.
     /// These attributes will be forcibly added to element.
