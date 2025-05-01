@@ -16,6 +16,7 @@
 
 pub mod errors;
 mod parse;
+mod rcdom;
 pub mod rules;
 mod sanitize;
 mod tests;

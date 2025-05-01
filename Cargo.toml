@@ -12,5 +12,4 @@ edition = "2018"
 [dependencies]
 regex = "1"
 lazy_static = "1"
-html5ever = "0.27"
-markup5ever_rcdom = "0.3"
+html5ever = "0.31"

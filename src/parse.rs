@@ -1,12 +1,12 @@
+use crate::rcdom::{Node, RcDom, SerializableHandle};
 use html5ever::driver::ParseOpts;
 use html5ever::parse_document;
 use html5ever::{
     interface::QualName,
-    local_name, namespace_prefix, namespace_url, ns, serialize,
+    local_name, namespace_prefix, ns, serialize,
     serialize::{SerializeOpts, TraversalScope},
     tendril::TendrilSink,
 };
-use markup5ever_rcdom::{Node, RcDom, SerializableHandle};
 use std::default::Default;
 use std::error::Error;
 use std::io::Cursor;
