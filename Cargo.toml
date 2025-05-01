@@ -11,5 +11,4 @@ edition = "2018"
 
 [dependencies]
 regex = "1"
-lazy_static = "1"
 html5ever = "0.31"

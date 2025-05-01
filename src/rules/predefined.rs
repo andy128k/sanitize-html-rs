@@ -4,8 +4,8 @@
 
 use super::pattern::Pattern;
 use super::{Element, Rules};
-use lazy_static::lazy_static;
 use regex::Regex;
+use std::sync::LazyLock;
 
 fn re(regex: &str) -> Pattern {
     Pattern::regex(Regex::new(regex).unwrap())
@@ -19,22 +19,20 @@ fn src() -> Pattern {
     re("^(http:|https:)") | !re("^[^/]+[[:space:]]*:")
 }
 
-lazy_static! {
-    /// Basic rules. Allows a variety of markup including formatting elements, links, and lists.
-    pub static ref BASIC: Rules = basic();
+/// Basic rules. Allows a variety of markup including formatting elements, links, and lists.
+pub static BASIC: LazyLock<Rules> = LazyLock::new(basic);
 
-    /// Default rules. Removes all tags.
-    pub static ref DEFAULT: Rules = default();
+/// Default rules. Removes all tags.
+pub static DEFAULT: LazyLock<Rules> = LazyLock::new(default);
 
-    /// Relaxed rules. Allows an even wider variety of markup, including images and tables
-    pub static ref RELAXED: Rules = relaxed();
+/// Relaxed rules. Allows an even wider variety of markup, including images and tables
+pub static RELAXED: LazyLock<Rules> = LazyLock::new(relaxed);
 
-    /// Restricted rules. Allows only very simple inline markup. No links, images, or block elements.
-    pub static ref RESTRICTED: Rules = restricted();
+/// Restricted rules. Allows only very simple inline markup. No links, images, or block elements.
+pub static RESTRICTED: LazyLock<Rules> = LazyLock::new(restricted);
 
-    /// Rules for document from untrusted sources. Removes all tags but text emphasizing and links.
-    pub static ref UNTRUSTED: Rules = untrusted();
-}
+/// Rules for document from untrusted sources. Removes all tags but text emphasizing and links.
+pub static UNTRUSTED: LazyLock<Rules> = LazyLock::new(untrusted);
 
 fn basic() -> Rules {
     Rules::new()
