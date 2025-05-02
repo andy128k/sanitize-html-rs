@@ -1,6 +1,6 @@
 [package]
 name = "sanitize_html"
-version = "0.8.1"
+version = "0.9.0"
 authors = ["Andrey Kutejko <andy128k@gmail.com>"]
 description = "Rule-based HTML Sanitization library"
 keywords = ["html", "sanitize"]
