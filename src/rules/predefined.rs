@@ -5,18 +5,27 @@
 use super::pattern::Pattern;
 use super::{Element, Rules};
 use regex::Regex;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
-fn re(regex: &str) -> Pattern {
-    Pattern::regex(Regex::new(regex).unwrap())
-}
+static HREF_SCHEME_REGEX: LazyLock<Arc<Regex>> =
+    LazyLock::new(|| Arc::new(Regex::new("^(ftp:|http:|https:|mailto:)").unwrap()));
+
+static SRC_SCHEME_REGEX: LazyLock<Arc<Regex>> =
+    LazyLock::new(|| Arc::new(Regex::new("^(http:|https:)").unwrap()));
+
+static SCHEME_LIKE_REGEX: LazyLock<Arc<Regex>> =
+    LazyLock::new(|| Arc::new(Regex::new("^[^/]+[[:space:]]*:").unwrap()));
 
 fn href() -> Pattern {
-    re("^(ftp:|http:|https:|mailto:)") | !re("^[^/]+[[:space:]]*:")
+    Pattern(Box::new(move |value| {
+        HREF_SCHEME_REGEX.is_match(value) || !SCHEME_LIKE_REGEX.is_match(value)
+    }))
 }
 
 fn src() -> Pattern {
-    re("^(http:|https:)") | !re("^[^/]+[[:space:]]*:")
+    Pattern(Box::new(move |value| {
+        SRC_SCHEME_REGEX.is_match(value) || !SCHEME_LIKE_REGEX.is_match(value)
+    }))
 }
 
 /// Basic rules. Allows a variety of markup including formatting elements, links, and lists.
