@@ -81,6 +81,7 @@ fn basic() -> Rules {
         .element(Element::new("u"))
         .element(Element::new("ul"))
         .element(Element::new("var"))
+        .element(Element::new("style").attribute("media", Pattern::any()))
         .space("address")
         .space("article")
         .space("aside")
@@ -254,6 +255,7 @@ fn relaxed() -> Rules {
         .element(relaxed_element("ul").attribute("type", Pattern::any()))
         .element(relaxed_element("var"))
         .element(relaxed_element("wbr"))
+        .element(Element::new("style").attribute("media", Pattern::any()))
         .space("address")
         .space("article")
         .space("aside")
@@ -297,6 +299,9 @@ fn restricted() -> Rules {
         .space("pre")
         .space("section")
         .space("ul")
+        .delete("noscript")
+        .delete("script")
+        .delete("style")
 }
 
 fn untrusted() -> Rules {
@@ -338,6 +343,9 @@ fn untrusted() -> Rules {
         .space("pre")
         .space("section")
         .space("ul")
+        .delete("noscript")
+        .delete("script")
+        .delete("style")
 }
 
 #[cfg(test)]
@@ -347,7 +355,7 @@ mod tests {
     #[test]
     fn basic_does_not_fail() {
         let rules = basic();
-        assert_eq!(rules.allowed_elements.len(), 31);
+        assert_eq!(rules.allowed_elements.len(), 32);
     }
 
     #[test]
@@ -361,7 +369,7 @@ mod tests {
     #[test]
     fn relaxed_does_not_fail() {
         let rules = relaxed();
-        assert_eq!(rules.allowed_elements.len(), 58);
+        assert_eq!(rules.allowed_elements.len(), 59);
         assert_eq!(rules.space_elements.len(), 8);
     }
 

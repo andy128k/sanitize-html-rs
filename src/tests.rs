@@ -29,7 +29,15 @@ fn basic_default() {
 fn basic_restricted() {
     assert_eq!(
         &sanitize_str(&RESTRICTED, BASIC_HTML).unwrap(),
-        "<b>Lorem</b> ipsum <strong>dolor</strong> sit amet alert(\"hello world\");"
+        "<b>Lorem</b> ipsum <strong>dolor</strong> sit amet "
+    );
+}
+
+#[test]
+fn basic_untrusted() {
+    assert_eq!(
+        &sanitize_str(&UNTRUSTED, BASIC_HTML).unwrap(),
+        "<b>Lorem</b> <a href=\"pants\" rel=\"noreferrer noopener\" target=\"_blank\">ipsum</a> <a href=\"http://foo.com/\" rel=\"noreferrer noopener\" target=\"_blank\"><strong>dolor</strong></a> sit amet "
     );
 }
 
@@ -65,7 +73,15 @@ fn malformed_default() {
 fn malformed_restricted() {
     assert_eq!(
         &sanitize_str(&RESTRICTED, MALFORMED_HTML).unwrap(),
-        "Lorem <strong>dolor</strong> sit amet alert(\"hello world\");"
+        "Lorem <strong>dolor</strong> sit amet "
+    );
+}
+
+#[test]
+fn malformed_untrusted() {
+    assert_eq!(
+        &sanitize_str(&UNTRUSTED, MALFORMED_HTML).unwrap(),
+        "Lorem <a href=\"pants\" rel=\"noreferrer noopener\" target=\"_blank\"><strong>dolor</strong></a> sit amet "
     );
 }
 
@@ -642,4 +658,14 @@ fn custom_rules() {
         &sanitize_str(&rules, html).unwrap(),
         "<b>Lo<!-- comment -->rem</b> ipsum <span>dolor</span> sit amet "
     );
+}
+
+#[test]
+fn test_style() {
+    let input = "hello <style><!-- comment-->* {color: /*white*/#ffffff;}</style> world";
+    assert_eq!(input, sanitize_str(&BASIC, input).unwrap());
+    assert_eq!("hello  world", sanitize_str(&DEFAULT, input).unwrap());
+    assert_eq!(input, sanitize_str(&RELAXED, input).unwrap());
+    assert_eq!("hello  world", sanitize_str(&RESTRICTED, input).unwrap());
+    assert_eq!("hello  world", sanitize_str(&UNTRUSTED, input).unwrap());
 }
