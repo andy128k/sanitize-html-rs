@@ -1,6 +1,6 @@
 use crate::rcdom::{Node, NodeData, RcDom};
 use crate::rules::{Element, Rules};
-use html5ever::{interface::QualName, ns, tendril::StrTendril, Attribute, LocalName};
+use html5ever::{Attribute, LocalName, interface::QualName, ns, tendril::StrTendril};
 use std::{cell::RefCell, rc::Rc};
 
 fn simple_qual_name(name: &str) -> QualName {
